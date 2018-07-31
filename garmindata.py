@@ -1,9 +1,11 @@
 import math
 from datetime import datetime
 import xml.dom.minidom as xml
+import matplotlib.pyplot as plt
+import numpy as np
 
-#earths size in nautical miles we will use this later
-earthsize = 21637.508
+#earths radius in nautical miles we will use this later
+earthrad = 3436.801
 
 
 """
@@ -27,10 +29,10 @@ def calctimedelta(pt1, pt2):
     convert latitude and longitude to radians and return as tuple  these are really kind made up units so dont worry about the orientation
 """
 def convlatlon(lat, lon):
-    latrad = math.radians(lat+180)
+    latrad = lat * math.pi / 180
 
-    lonrad = math.cos(latrad) * math.radians(lon)
-    print "%f vs %f" % (math.radians(lon),lonrad)
+    lonrad = lat * math.pi / 180 * math.cos(latrad)
+
 
     return latrad,lonrad
 
@@ -39,10 +41,9 @@ def convlatlon(lat, lon):
     Calculate distance between two points in nautical miles
 """
 def calcdist(pt1, pt2):
-    latrad1, lonrad1 = convlatlon(pt1['lat'],pt1['lon'])
-    latrad2, lonrad2 = convlatlon(pt2['lat'],pt2['lon'])
         
-    return math.sqrt((latrad1-latrad2)**2 + (lonrad1-lonrad2)**2) * earthsize
+    return math.sqrt(math.pow((pt1['latrad']-pt2['latrad']),2) + math.pow((pt1['lonrad']-pt2['lonrad']),2)) * earthrad
+    
         
 
 
@@ -83,6 +84,19 @@ def loaddata(path):
 
         data['data'].append(fmtpt)
 
+    #convert latlong to radians earth units (I made that up) and store
+    for i in data['data']:
+        i['latrad'],i['lonrad'] = convlatlon(i['lat'],i['lon'])
+
+
+    #calculate speed at all tracking p-oints but first later this could be fixed when command line options are added to constrain time
+    data['data'][0]['speed'] = 0.0
+
+    for i in range(len(data['data'])-1):
+        data['data'][i+1]['speed'] = calcspeed(data['data'][i],data['data'][i+1])
+        
+        #print data['data'][i]['time'],data['data'][i]['speed']  #sanity check interresting note for some reason OpenCPN is giving me speed in miles even though its set to NM....took a while to figure out that descrep
+
     return data
 
 
@@ -93,6 +107,18 @@ def convdatetime(dtstr):
     return datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%SZ")
 
 
+"""
+    Converts a column of tracking data to an arry of points for graphing and such, probably could have done all this way more effeciently but hey its on CPU cycles and ram right
+    Pass data array and column name
+"""
+def column2arr(data, col):
+    retarr = []
+    for pt in data:
+        retarr.append(pt[col])
+
+    return retarr
+    
+
 
 if __name__ == "__main__":
     
@@ -101,7 +127,16 @@ if __name__ == "__main__":
     #for now just load the file we are working with
     data = loaddata("2018-07-29 03_36_41 Around the Lake Race Cookie Monster.gpx")
 
-    for i in range(len(data['data'])-1):
-        print calcspeed(data['data'][i], data['data'][i+1])
+    x = np.array(column2arr(data['data'],"lon"))
+    y = np.array(column2arr(data['data'],"lat"))
+    s = np.array(column2arr(data['data'],"speed"))
 
+    #calculate aspect ratio
 
+    plt.ylim((data['minlat'],data['maxlat']))
+    mod = (data['maxlon']-data['minlon']) / math.cos(data['data'][0]['latrad']) / 2
+    plt.xlim((data['minlon']-mod,data['maxlon']+mod))
+    plt.plot(x,y)
+
+    plt.show()
+    
