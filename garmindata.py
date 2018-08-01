@@ -136,7 +136,8 @@ if __name__ == "__main__":
     plt.ylim((data['minlat'],data['maxlat']))
     mod = (data['maxlon']-data['minlon']) / math.cos(data['data'][0]['latrad']) / 2
     plt.xlim((data['minlon']-mod,data['maxlon']+mod))
-    plt.plot(x,y)
+    plt.scatter(x,y, c=s)
+    plt.colorbar()
 
     plt.show()
     
