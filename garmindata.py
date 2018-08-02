@@ -3,6 +3,9 @@ from datetime import datetime
 import xml.dom.minidom as xml
 import matplotlib.pyplot as plt
 import numpy as np
+from Tkinter import Tk
+import tkFileDialog
+
 
 #earths radius in nautical miles we will use this later
 earthrad = 3436.801
@@ -118,25 +121,55 @@ def column2arr(data, col):
 
     return retarr
     
+"""
+    Returns an array of the time offset in hours
+"""
+def gettimeoffsets(data):
+    
+    #start from first trkpt
+    starttime = data[0]['time']
 
+    output = []
+    for i in data:
+        t = i['time'] - starttime
+
+        output.append(24.0 * t.days + t.seconds / 3600)
+    
+    return output
 
 if __name__ == "__main__":
     
     print "Starting..."
 
+    #get filename
+    root = Tk()
+    filename = tkFileDialog.askopenfilename()
+    root.destroy()
+
     #for now just load the file we are working with
-    data = loaddata("2018-07-29 03_36_41 Around the Lake Race Cookie Monster.gpx")
+    data = loaddata(filename)
 
     x = np.array(column2arr(data['data'],"lon"))
     y = np.array(column2arr(data['data'],"lat"))
     s = np.array(column2arr(data['data'],"speed"))
+    t = np.array(gettimeoffsets(data['data']))
 
     #calculate aspect ratio
-
-    plt.ylim((data['minlat'],data['maxlat']))
     mod = (data['maxlon']-data['minlon']) / math.cos(data['data'][0]['latrad']) / 2
+
+    #plot time data
+    plt.title("Tracking data with TIME in hours")
     plt.xlim((data['minlon']-mod,data['maxlon']+mod))
-    plt.scatter(x,y, c=s)
+    plt.ylim((data['minlat'],data['maxlat']))
+    plt.scatter(x,y,c=t, cmap='rainbow')
+    plt.colorbar()
+    plt.show()
+
+    #plot speed data
+    plt.title("Tracking data with SPEED in knots")
+    plt.xlim((data['minlon']-mod,data['maxlon']+mod))
+    plt.ylim((data['minlat'],data['maxlat']))
+    plt.scatter(x,y, c=s, cmap='viridis')
     plt.colorbar()
 
     plt.show()
