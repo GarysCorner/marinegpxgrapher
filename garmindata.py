@@ -1,7 +1,10 @@
+#! /usr/bin/env python
+
 import math
 from datetime import datetime
 import xml.dom.minidom as xml
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 import numpy as np
 from Tkinter import Tk
 import tkFileDialog
@@ -133,9 +136,22 @@ def gettimeoffsets(data):
     for i in data:
         t = i['time'] - starttime
 
-        output.append(24.0 * t.days + t.seconds / 3600)
+        output.append(24.0 * t.days + t.seconds / 3600.)
     
     return output
+
+"""
+    Format lat/lon from floats to string with degrees decimel minutes
+"""
+def formatter(x,p):
+
+    degrees = int(x)
+    minutes = x - degrees
+
+    #do this better
+    return str(degrees) + "' " + str(minutes) + "\"" 
+    
+
 
 if __name__ == "__main__":
     
@@ -157,20 +173,39 @@ if __name__ == "__main__":
     #calculate aspect ratio
     mod = (data['maxlon']-data['minlon']) / math.cos(data['data'][0]['latrad']) / 2
 
+    #plot speed/time
+    plt.title("Speed(knots)/time(hours)")
+    plt.plot(t,s)
+    plt.show()
+    plt.cla()
     #plot time data
     plt.title("Tracking data with TIME in hours")
+
+    fig, ax = plt.subplot()
+    ax.xaxis.set_major_formatter(FuncFormatter(formatter))
+    ax.yaxis.set_major_formatter(FuncFormatter(formatter))
+
     plt.xlim((data['minlon']-mod,data['maxlon']+mod))
     plt.ylim((data['minlat'],data['maxlat']))
-    plt.scatter(x,y,c=t, cmap='rainbow')
+    plt.scatter(x,y,c=t, cmap='plasma')
     plt.colorbar()
     plt.show()
 
     #plot speed data
+    #formatter for degres decim minutes
+    
+
     plt.title("Tracking data with SPEED in knots")
+    
+    fig, ax = plt.subplots()
+    ax.yaxis.set_major_formatter(FuncFormatter(formatter))
+    ax.xaxis.set_major_formatter(FuncFormatter(formatter))
+
     plt.xlim((data['minlon']-mod,data['maxlon']+mod))
     plt.ylim((data['minlat'],data['maxlat']))
-    plt.scatter(x,y, c=s, cmap='viridis')
+    plt.scatter(x,y, c=s, cmap='hot')
     plt.colorbar()
-
+    plt.grid()
     plt.show()
+
     
