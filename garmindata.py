@@ -174,32 +174,24 @@ if __name__ == "__main__":
     mod = (data['maxlon']-data['minlon']) / math.cos(data['data'][0]['latrad']) / 2
 
     #plot speed/time
-    plt.title("Speed(knots)/time(hours)")
+    plt.figure("Speed(knots)/time(hours)")
     plt.plot(t,s)
-    plt.show()
-    plt.cla()
-    #plot time data
-    plt.title("Tracking data with TIME in hours")
+    #plt.show()
 
-    fig, ax = plt.subplot()
-    ax.xaxis.set_major_formatter(FuncFormatter(formatter))
-    ax.yaxis.set_major_formatter(FuncFormatter(formatter))
+    #plot time data
+    plt.figure("Tracking data with TIME in hours")
 
     plt.xlim((data['minlon']-mod,data['maxlon']+mod))
     plt.ylim((data['minlat'],data['maxlat']))
     plt.scatter(x,y,c=t, cmap='plasma')
     plt.colorbar()
-    plt.show()
+    #plt.show()
 
     #plot speed data
     #formatter for degres decim minutes
     
 
-    plt.title("Tracking data with SPEED in knots")
-    
-    fig, ax = plt.subplots()
-    ax.yaxis.set_major_formatter(FuncFormatter(formatter))
-    ax.xaxis.set_major_formatter(FuncFormatter(formatter))
+    plt.figure("Tracking data with SPEED in knots")
 
     plt.xlim((data['minlon']-mod,data['maxlon']+mod))
     plt.ylim((data['minlat'],data['maxlat']))
