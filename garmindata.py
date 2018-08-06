@@ -17,17 +17,15 @@ earthrad = 3436.801
 """
     Calculate speed in nautical miles
 """
-def calcspeed(pt1, pt2):
-    return calcdist(pt1,pt2) / calctimedelta(pt1,pt2)
+def calcspeed(data, pt1,pt2):
+    return calcdist(data, pt1, pt2) / (calctimedelta(data, pt1, pt2) / 3600.)
 
 
 """
     Calculate and return timedelta in hours as float of two points.  Enter points in the order in which they were recorded
 """
-def calctimedelta(pt1, pt2):
-    diff = pt2['time'] - pt1['time']
-    
-    return diff.seconds / (60.0 * 60.0) + diff.microseconds / 1000000.0
+def calctimedelta(data,pt1, pt2):
+    return data['time'][pt2] - data['time'][pt1]
 
 
 
@@ -35,9 +33,10 @@ def calctimedelta(pt1, pt2):
     convert latitude and longitude to radians and return as tuple  these are really kind made up units so dont worry about the orientation
 """
 def convlatlon(lat, lon):
+    
     latrad = lat * math.pi / 180
 
-    lonrad = lat * math.pi / 180 * math.cos(latrad)
+    lonrad = lat * math.pi / 180 * np.cos(latrad)
 
 
     return latrad,lonrad
@@ -46,9 +45,9 @@ def convlatlon(lat, lon):
 """
     Calculate distance between two points in nautical miles
 """
-def calcdist(pt1, pt2):
+def calcdist(data,pt1, pt2):
         
-    return math.sqrt(math.pow((pt1['latrad']-pt2['latrad']),2) + math.pow((pt1['lonrad']-pt2['lonrad']),2)) * earthrad
+    return math.sqrt(math.pow(data['latrad'][pt1]-data['latrad'][pt2],2) + math.pow(data['lonrad'][pt1]-data['lonrad'][pt2],2)) * earthrad
     
         
 
@@ -60,14 +59,12 @@ def calcdist(pt1, pt2):
 def loaddata(path):
     data = {}
     
-    data['data'] = []
-
     root = xml.parse(path)
 
     #parse metadata
+    #add some error checking here to since I dont know if this metadata is availble in all tracking file
     metadata = root.getElementsByTagName("metadata")[0]
-    data['time'] = convdatetime(metadata.getElementsByTagName("time")[0].firstChild.data)
-
+    data['time'] = datetime.strptime(metadata.getElementsByTagName("time")[0].firstChild.data,"%Y-%m-%dT%H:%M:%SZ") 
     bounds = metadata.getElementsByTagName("bounds")[0]
     data['maxlat'] = float(bounds.getAttribute('maxlat'))
     data['maxlon'] = float(bounds.getAttribute('maxlon'))
@@ -77,29 +74,31 @@ def loaddata(path):
 
     #later we probably need to make sure the track isnt split between segments
 
-    trkpts = []
+    gpxpts = root.getElementsByTagName("trkpt")
+    starttime = datetime.strptime(gpxpts[0].getElementsByTagName("time")[0].firstChild.data, "%Y-%m-%dT%H:%M:%SZ") 
+    
+    data['ptcount'] = len(gpxpts)
+    data['data'] = { 'lat': np.zeros(data['ptcount']), 'lon':np.zeros(data['ptcount']), 'time':np.zeros(data['ptcount']) }
+
     #go through and process all tracking points
-    for pt in root.getElementsByTagName("trkpt"):
-        fmtpt = {}
-        fmtpt['lat'] = float(pt.getAttribute("lat"))
-        fmtpt['lon'] = float(pt.getAttribute("lon"))
-        fmtpt['time'] = convdatetime(pt.getElementsByTagName("time")[0].firstChild.data)
+    for i in range(data['ptcount']):
+        
+        data['data']['lat'][i] = float(gpxpts[i].getAttribute("lat"))
+        data['data']['lon'][i] = float(gpxpts[i].getAttribute("lon"))
+        data['data']['time'][i] = convdatetime(gpxpts[i].getElementsByTagName("time")[0].firstChild.data, starttime)
 
-        fmtpt['temp'] = float(pt.getElementsByTagName("gpxx:Temperature")[0].firstChild.data)
-
-
-        data['data'].append(fmtpt)
+        #There is no chance im going to use this since the wristwatch cant get accurate temp data anyway
+        #fmtpt['temp'] = float(pt.getElementsByTagName("gpxx:Temperature")[0].firstChild.data)
 
     #convert latlong to radians earth units (I made that up) and store
-    for i in data['data']:
-        i['latrad'],i['lonrad'] = convlatlon(i['lat'],i['lon'])
+    data['data']['latrad'], data['data']['lonrad'] = convlatlon(data['data']['lat'], data['data']['lon'])
 
-
+    data['data']['speed'] = np.zeros(data['ptcount'])
     #calculate speed at all tracking p-oints but first later this could be fixed when command line options are added to constrain time
-    data['data'][0]['speed'] = 0.0
+    data['data']['speed'][0] = 0.0
 
-    for i in range(len(data['data'])-1):
-        data['data'][i+1]['speed'] = calcspeed(data['data'][i],data['data'][i+1])
+    for i in range(data['ptcount']-1):
+        data['data']['speed'][i+1] = calcspeed(data['data'], i, i+1)
         
         #print data['data'][i]['time'],data['data'][i]['speed']  #sanity check interresting note for some reason OpenCPN is giving me speed in miles even though its set to NM....took a while to figure out that descrep
 
@@ -109,36 +108,10 @@ def loaddata(path):
 """
     Convert Garmin UTC format to datetime object
 """
-def convdatetime(dtstr):
-    return datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%SZ")
-
-
-"""
-    Converts a column of tracking data to an arry of points for graphing and such, probably could have done all this way more effeciently but hey its on CPU cycles and ram right
-    Pass data array and column name
-"""
-def column2arr(data, col):
-    retarr = []
-    for pt in data:
-        retarr.append(pt[col])
-
-    return retarr
+def convdatetime(dtstr, starttime):
+    pttime = datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%SZ") - starttime
+    return float(pttime.seconds + pttime.days*24*3600)
     
-"""
-    Returns an array of the time offset in hours
-"""
-def gettimeoffsets(data):
-    
-    #start from first trkpt
-    starttime = data[0]['time']
-
-    output = []
-    for i in data:
-        t = i['time'] - starttime
-
-        output.append(24.0 * t.days + t.seconds / 3600.)
-    
-    return output
 
 """
     Format lat/lon from floats to string with degrees decimel minutes
@@ -151,6 +124,42 @@ def formatter(x,p):
     #do this better
     return str(degrees) + "' " + str(minutes) + "\"" 
     
+
+"""
+    Graph all the data this is what you came here for
+"""
+def plotdata(data):
+    # ['lat','lon','time', 'latrad', 'lonrad', 'speed']  
+    
+    
+    #calculate aspect ratio
+    mod = (data['data']['lon'].max()-data['data']['lon'].min()) / math.cos(data['data']['latrad'][0]) / 2
+
+    #plot speed/time
+    plt.figure("Speed(knots)/time(hours)")
+    plt.plot(data['data']['time']/3600,data['data']['speed'])
+    #plt.show()
+
+    #plot time data
+    plt.figure("Tracking data with TIME in hours")
+
+    plt.xlim((data['data']['lon'].min()-mod,data['data']['lon'].max()+mod))
+    plt.ylim((data['data']['lat'].min(),data['data']['lat'].max()))
+    plt.scatter(data['data']['lon'],data['data']['lat'], c=data['data']['speed'], cmap='plasma')
+    plt.colorbar()
+    #plt.show()
+    
+
+    plt.figure("Tracking data with SPEED in knots")
+
+    plt.xlim((data['data']['lon'].min()-mod,data['data']['lon'].max()+mod))
+    plt.ylim((data['data']['lat'].min(),data['data']['lat'].max()))
+    plt.scatter(data['data']['lon'],data['data']['lat'], c=data['data']['speed'], cmap='hot')
+    plt.colorbar()
+    plt.grid()
+    plt.show()
+
+
 
 
 if __name__ == "__main__":
@@ -165,39 +174,4 @@ if __name__ == "__main__":
     #for now just load the file we are working with
     data = loaddata(filename)
 
-    x = np.array(column2arr(data['data'],"lon"))
-    y = np.array(column2arr(data['data'],"lat"))
-    s = np.array(column2arr(data['data'],"speed"))
-    t = np.array(gettimeoffsets(data['data']))
-
-    #calculate aspect ratio
-    mod = (data['maxlon']-data['minlon']) / math.cos(data['data'][0]['latrad']) / 2
-
-    #plot speed/time
-    plt.figure("Speed(knots)/time(hours)")
-    plt.plot(t,s)
-    #plt.show()
-
-    #plot time data
-    plt.figure("Tracking data with TIME in hours")
-
-    plt.xlim((data['minlon']-mod,data['maxlon']+mod))
-    plt.ylim((data['minlat'],data['maxlat']))
-    plt.scatter(x,y,c=t, cmap='plasma')
-    plt.colorbar()
-    #plt.show()
-
-    #plot speed data
-    #formatter for degres decim minutes
-    
-
-    plt.figure("Tracking data with SPEED in knots")
-
-    plt.xlim((data['minlon']-mod,data['maxlon']+mod))
-    plt.ylim((data['minlat'],data['maxlat']))
-    plt.scatter(x,y, c=s, cmap='hot')
-    plt.colorbar()
-    plt.grid()
-    plt.show()
-
-    
+    plotdata(data)
