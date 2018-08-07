@@ -49,7 +49,15 @@ def calcdist(data,pt1, pt2):
         
     return math.sqrt(math.pow(data['latrad'][pt1]-data['latrad'][pt2],2) + math.pow(data['lonrad'][pt1]-data['lonrad'][pt2],2)) * earthrad
     
-        
+
+"""
+    Converts radian data to nautical miles offset from starting point.
+    Takes datastructure as input, modifies data structure
+    returns nothing
+"""
+def convrad2nm(data):
+    data['data']['latnm'] = (data['data']['latrad'] - data['data']['latrad'][0]) * earthrad
+    data['data']['lonnm'] = (data['data']['lonrad'] - data['data']['lonrad'][0]) * earthrad
 
 
 """
@@ -131,13 +139,14 @@ def formatter(x,p):
 def plotdata(data):
     # ['lat','lon','time', 'latrad', 'lonrad', 'speed']  
     
+    timedatahours = data['data']['time'] / 3600.
     
     #calculate aspect ratio
     mod = (data['data']['lon'].max()-data['data']['lon'].min()) / math.cos(data['data']['latrad'][0]) / 2
 
     #plot speed/time
     plt.figure("Speed(knots)/time(hours)")
-    plt.plot(data['data']['time']/3600,data['data']['speed'])
+    plt.plot( timedatahours,data['data']['speed'])
     #plt.show()
 
     #plot time data
@@ -145,7 +154,7 @@ def plotdata(data):
 
     plt.xlim((data['data']['lon'].min()-mod,data['data']['lon'].max()+mod))
     plt.ylim((data['data']['lat'].min(),data['data']['lat'].max()))
-    plt.scatter(data['data']['lon'],data['data']['lat'], c=data['data']['speed'], cmap='plasma')
+    plt.scatter(data['data']['lon'],data['data']['lat'], c=timedatahours, cmap='plasma')
     plt.colorbar()
     #plt.show()
     
@@ -173,5 +182,7 @@ if __name__ == "__main__":
 
     #for now just load the file we are working with
     data = loaddata(filename)
+
+    convrad2nm(data)
 
     plotdata(data)
