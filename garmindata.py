@@ -34,9 +34,9 @@ def calctimedelta(data,pt1, pt2):
 """
 def convlatlon(lat, lon):
     
-    latrad = lat * math.pi / 180
+    latrad = np.radians(lat)
 
-    lonrad = lat * math.pi / 180 * np.cos(latrad)
+    lonrad = np.radians(lon * np.cos(latrad[0]))
 
 
     return latrad,lonrad
@@ -141,29 +141,24 @@ def plotdata(data):
     
     timedatahours = data['data']['time'] / 3600.
     
-    #calculate aspect ratio
-    mod = (data['data']['lon'].max()-data['data']['lon'].min()) / math.cos(data['data']['latrad'][0]) / 2
-
     #plot speed/time
     plt.figure("Speed(knots)/time(hours)")
     plt.plot( timedatahours,data['data']['speed'])
     #plt.show()
 
-    #plot time data
-    plt.figure("Tracking data with TIME in hours")
 
-    plt.xlim((data['data']['lon'].min()-mod,data['data']['lon'].max()+mod))
-    plt.ylim((data['data']['lat'].min(),data['data']['lat'].max()))
-    plt.scatter(data['data']['lon'],data['data']['lat'], c=timedatahours, cmap='plasma')
+    #plot time data
+    fix, ax = plt.subplots()
+    ax.set_aspect('equal')
+    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap='plasma')
     plt.colorbar()
+    plt.grid()
     #plt.show()
     
 
-    plt.figure("Tracking data with SPEED in knots")
-
-    plt.xlim((data['data']['lon'].min()-mod,data['data']['lon'].max()+mod))
-    plt.ylim((data['data']['lat'].min(),data['data']['lat'].max()))
-    plt.scatter(data['data']['lon'],data['data']['lat'], c=data['data']['speed'], cmap='hot')
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap='hot')
     plt.colorbar()
     plt.grid()
     plt.show()
