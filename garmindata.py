@@ -143,6 +143,8 @@ def plotdata(data):
     
     #plot speed/time
     plt.figure("Speed(knots)/time(hours)")
+    plt.xlabel("Hour")
+    plt.ylabel("Speed")
     plt.plot( timedatahours,data['data']['speed'])
     #plt.show()
 
@@ -150,16 +152,22 @@ def plotdata(data):
     #plot time data
     fix, ax = plt.subplots()
     ax.set_aspect('equal')
+    plt.title("Tracking with Time data (NM|hours)")
+    plt.ylabel("NM North-South from start")
+    plt.xlabel("NM East-Weat from start")
     plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap='plasma')
-    plt.colorbar()
+    plt.colorbar(label="Time (hours)")
     plt.grid()
     #plt.show()
     
 
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
+    plt.title("Tracking with speed data (NM|knots)")
+    plt.ylabel("NM North-South from start")
+    plt.xlabel("NM East-Weat from start")
     plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap='hot')
-    plt.colorbar()
+    plt.colorbar(label="Speed (knots)")
     plt.grid()
     plt.show()
 
