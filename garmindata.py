@@ -65,24 +65,55 @@ def convrad2nm(data):
     returns object with metadata and datapoints
 """
 def loaddata(path):
+
+    print "Loading data from \"%s\"" % path
+
     data = {}
     
     root = xml.parse(path)
 
     #parse metadata
     #add some error checking here to since I dont know if this metadata is availble in all tracking file
-    metadata = root.getElementsByTagName("metadata")[0]
-    data['time'] = datetime.strptime(metadata.getElementsByTagName("time")[0].firstChild.data,"%Y-%m-%dT%H:%M:%SZ") 
-    bounds = metadata.getElementsByTagName("bounds")[0]
-    data['maxlat'] = float(bounds.getAttribute('maxlat'))
-    data['maxlon'] = float(bounds.getAttribute('maxlon'))
-    data['minlat'] = float(bounds.getAttribute('minlat'))
-    data['minlon'] = float(bounds.getAttribute('minlon'))
+
+    trk = root.getElementsByTagName("trk")
+    if len(trk) > 0 and len(trk[0].getElementsByTagName("name")) == 1:
+        data['name'] = trk[0].getElementsByTagName("name")[0].firstChild.data
+        print "Track title: ", data['name']
+
+    else:
+        print "Track has no name"
 
 
-    #later we probably need to make sure the track isnt split between segments
+    if len(root.getElementsByTagName("metadata")) == 1:
+
+        metadata = root.getElementsByTagName("metadata")[0]
+       
+        if len(metadata.getElementsByTagName("time")) == 1:
+            data['time'] = metadata.getElementsByTagName("time")[0].firstChild.data 
+            print "Track recorded at %s with" % ( data['time'] )
+
+
+            if len(metadata.getElementsByTagName("bounds")) == 1:
+
+                bounds = metadata.getElementsByTagName("bounds")[0]
+                data['maxlat'] = bounds.getAttribute('maxlat')
+                data['maxlon'] = bounds.getAttribute('maxlon')
+                data['minlat'] = bounds.getAttribute('minlat')
+                data['minlon'] = bounds.getAttribute('minlon')
+        
+                print "\tMaximum/Minimum Latitude:\t%s\t/\t%s" % ( data['maxlat'], data['minlat'] )
+                print "\tMaximum/Minimum Longitude:\t%s\t/\t%s" % ( data['maxlon'], data['minlon'] ) 
+
+    else:
+        print "Metadata not found continuing"
+    
+    print "Track has %i segments" % len(root.getElementsByTagName("trkseg"))
+
 
     gpxpts = root.getElementsByTagName("trkpt")
+
+    print "Found %i points of tracking data" % (len(gpxpts))
+
     starttime = datetime.strptime(gpxpts[0].getElementsByTagName("time")[0].firstChild.data, "%Y-%m-%dT%H:%M:%SZ") 
     
     data['ptcount'] = len(gpxpts)
@@ -108,7 +139,7 @@ def loaddata(path):
     for i in range(data['ptcount']-1):
         data['data']['speed'][i+1] = calcspeed(data['data'], i, i+1)
         
-        #print data['data'][i]['time'],data['data'][i]['speed']  #sanity check interresting note for some reason OpenCPN is giving me speed in miles even though its set to NM....took a while to figure out that descrep
+    convrad2nm(data)
 
     return data
 
@@ -140,7 +171,9 @@ def plotdata(data):
     # ['lat','lon','time', 'latrad', 'lonrad', 'speed']  
     
     timedatahours = data['data']['time'] / 3600.
-    
+   
+    print "Plotting speed over time..."
+
     #plot speed/time
     plt.figure("Speed(knots)/time(hours)")
     plt.xlabel("Hour")
@@ -148,6 +181,7 @@ def plotdata(data):
     plt.plot( timedatahours,data['data']['speed'])
     #plt.show()
 
+    print "Plotting tracking data with time in"
 
     #plot time data
     fix, ax = plt.subplots()
@@ -160,6 +194,7 @@ def plotdata(data):
     plt.grid()
     #plt.show()
     
+    print "Plotting tracking data with speed it nautical miles per hour"
 
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
@@ -169,6 +204,9 @@ def plotdata(data):
     plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap='hot')
     plt.colorbar(label="Speed (knots)")
     plt.grid()
+    
+    print "The graphs may be displayed one in front of the other!"
+    
     plt.show()
 
 
@@ -182,10 +220,10 @@ if __name__ == "__main__":
     root = Tk()
     filename = tkFileDialog.askopenfilename()
     root.destroy()
-
+    
     #for now just load the file we are working with
     data = loaddata(filename)
 
-    convrad2nm(data)
+   
 
     plotdata(data)
