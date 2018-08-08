@@ -1,4 +1,8 @@
 #! /usr/bin/env python
+#File:		marinegpxgrapher.py
+#Author:	Gary Bezet
+#Date:		2018-07-29
+#Desc:		This program is designed to graph GPX tracking data for marine application.  I wrote it to get a more useful understanding of tracking data from regattas.  The basic problem is that tracking data doesn't tell a very good story without speed and/or time data.  While programs like OpenCPN are very useful I didn't find the display of tracking data was adequite.  To solve this I wrote this program which I intend to be used with a chart plotter like OpenCPN to provide additional data and allow you to form a good narrative about your last race.  If you look back at git revision history you may notice that I originally was writing this code to tear down the GPX data into a better format, but the project kept evolving and became what it is now.  Hope you find it useful.
 
 import math
 from datetime import datetime
