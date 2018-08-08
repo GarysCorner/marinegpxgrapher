@@ -8,7 +8,7 @@ from matplotlib.ticker import FuncFormatter
 import numpy as np
 from Tkinter import Tk
 import tkFileDialog
-
+import os
 
 #earths radius in nautical miles we will use this later
 earthrad = 3436.801
@@ -68,7 +68,7 @@ def loaddata(path):
 
     print "Loading data from \"%s\"" % path
 
-    data = {}
+    data = {'filename':os.path.basename(path)}
     
     root = xml.parse(path)
 
@@ -82,6 +82,7 @@ def loaddata(path):
 
     else:
         print "Track has no name"
+        data['name'] = None
 
 
     if len(root.getElementsByTagName("metadata")) == 1:
@@ -158,21 +159,30 @@ def convdatetime(dtstr, starttime):
 def plotdata(data):
     # ['lat','lon','time', 'latrad', 'lonrad', 'speed']  
     
+    if data['name'] == None:
+        trkname = data['filename']
+
+    else:
+        trkname = data['name']
+
     timedatahours = data['data']['time'] / 3600.
    
     print "Plotting speed over time..."
 
     #plot speed/time
-    plt.figure("Speed(knots)/time(hours)")
+    fig, ax = plt.subplots()
+    fig.canvas.set_window_title(trkname)
+    plt.title("Speed / time (knots/hours))")
     plt.xlabel("Hour")
-    plt.ylabel("Speed")
+    plt.ylabel("Speed (knots)")
     plt.plot( timedatahours,data['data']['speed'])
     #plt.show()
 
     print "Plotting tracking data with time in"
 
     #plot time data
-    fix, ax = plt.subplots()
+    fig, ax = plt.subplots()
+    fig.canvas.set_window_title(trkname)
     ax.set_aspect('equal')
     plt.title("Tracking with Time data (NM|hours)")
     plt.ylabel("NM North-South from start")
@@ -185,6 +195,7 @@ def plotdata(data):
     print "Plotting tracking data with speed it nautical miles per hour"
 
     fig, ax = plt.subplots()
+    fig.canvas.set_window_title(trkname)
     ax.set_aspect('equal')
     plt.title("Tracking with speed data (NM|knots)")
     plt.ylabel("NM North-South from start")
