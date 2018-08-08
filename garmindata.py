@@ -153,18 +153,6 @@ def convdatetime(dtstr, starttime):
     
 
 """
-    Format lat/lon from floats to string with degrees decimel minutes
-"""
-def formatter(x,p):
-
-    degrees = int(x)
-    minutes = x - degrees
-
-    #do this better
-    return str(degrees) + "' " + str(minutes) + "\"" 
-    
-
-"""
     Graph all the data this is what you came here for
 """
 def plotdata(data):
