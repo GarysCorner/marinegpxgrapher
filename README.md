@@ -1,4 +1,9 @@
 # Marine GPX Grapher
+```
+Name:     Gary Andrew Bezet
+Site/Org: GarysCorner.NET
+Email:    marinegpx@garyscorner.net
+```
 
 ## Description
 This program was originally intended to process tracking data from my Garmin Quatrix 3 marine watch.  You may see some references to "garmindata.py" in the git history this is because the originally intention was specifically for garmin export data, however when I learned more I realized the program should work with any standard GPX tracking data.
