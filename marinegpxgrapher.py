@@ -223,7 +223,11 @@ if __name__ == "__main__":
     root = Tk()
     filename = tkFileDialog.askopenfilename()
     root.destroy()
-    
+
+    if filename == ():
+        print "Canceled"
+        exit(0)
+
     #for now just load the file we are working with
     data = loaddata(filename)
 
