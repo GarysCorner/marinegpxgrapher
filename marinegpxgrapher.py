@@ -204,7 +204,7 @@ def plotdata(data):
     plt.title("Tracking with speed data (NM|knots)")
     plt.ylabel("NM North-South from start")
     plt.xlabel("NM East-Weat from start")
-    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap='hot')
+    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap='gnuplot2')
     plt.colorbar(label="Speed (knots)")
     plt.grid()
     
