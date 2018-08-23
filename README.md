@@ -11,7 +11,7 @@ This program was originally intended to process tracking data from my Garmin Qua
 This program is designed to graph GPX tracking data for marine application.  I wrote it to get a more useful understanding of tracking data from regattas.  The basic problem is that tracking data doesn't tell a very good story without speed and/or time data.  While programs like OpenCPN are very useful I didn't find the display of tracking data was adequate.  To solve this I wrote this program which I intend to be used with a chart plotter like OpenCPN to provide additional data and allow you to form a good narrative about your last race.  If you look back at git revision history you may notice that I originally was writing this code to tear down the GPX data into a better format, but the project kept evolving and became what it is now.  Hope you find it useful.
 
 ### Screenshot
-*Below:  Time and speed graphs from marinegpxgrapher (this program) in the foreground with OpenCPN in the background (I did not write OpenCPN and have no affiliation with it, but you should still download it, its pretty cool*
+*Below:  Time and speed graphs from marinegpxgrapher (this program) in the foreground with OpenCPN in the background (I did not write OpenCPN and have no affiliation with it, but you should still download it, its pretty cool)*
 ![marinegpxgrapher in foreground with OpenCPN in back](Screenshot.png)
 
 ### Files
