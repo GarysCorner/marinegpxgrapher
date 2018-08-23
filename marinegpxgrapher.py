@@ -188,7 +188,8 @@ def checkdtformat(dtstr):
                     convdatetime.format =   "%Y-%m-%dT%H:%M:%SZ"
     
                 except ValueError:
-                    print "No time format found for \"%s\" fatal error!" % (dtstr)
+                    print "No valid time format found for \"%s\" fatal error!" % (dtstr)
+                    print "Please report this error at https://github.com/GarysCorner/marinegpxgrapher/issues"
 
                     exit(1)
 
