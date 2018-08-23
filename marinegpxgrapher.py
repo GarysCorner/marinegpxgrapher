@@ -128,12 +128,11 @@ def loaddata(path):
         data['data']['lon'][i] = float(gpxpts[i].getAttribute("lon"))
         data['data']['time'][i] = convdatetime(gpxpts[i].getElementsByTagName("time")[0].firstChild.data, starttime)
 
-        #There is no chance im going to use this since the wristwatch cant get accurate temp data anyway
-        #fmtpt['temp'] = float(pt.getElementsByTagName("gpxx:Temperature")[0].firstChild.data)
 
-    #convert latlong to nm
+    #convert latlong to nautical mile offset
     convlatlon(data)
 
+    #calc speeds
     calcspeed(data)
 
     return data
@@ -159,8 +158,14 @@ def plotdata(data):
     else:
         trkname = data['name']
 
-    timeunit = "Hours"
-    timedatahours = data['data']['time'] / 3600.
+    if data['data']['time'][len(data['data']['time'])-1] > 9000:
+
+        timeunit = "Hour"
+        timedatahours = data['data']['time'] / 3600.
+
+    else:
+        timeunit = "Minute"
+        timedatahours = data['data']['time'] / 60.
 
 
    
@@ -169,10 +174,10 @@ def plotdata(data):
     #plot speed/time
     fig, ax = plt.subplots()
     fig.canvas.set_window_title(trkname)
-    plt.title("Speed / time (knots/hours))")
-    plt.xlabel("Hour")
+    plt.title("Speed / time (knots/%s)" % (timeunit))
+    plt.xlabel(timeunit)
     plt.ylabel("Speed (knots)")
-    plt.plot( timedatahours,data['data']['speed'])
+    plt.plot( timedatahours[1:],data['data']['speed'][1:])
     #plt.show()
 
     print "Plotting tracking data with time in"
@@ -181,11 +186,11 @@ def plotdata(data):
     fig, ax = plt.subplots()
     fig.canvas.set_window_title(trkname)
     ax.set_aspect('equal')
-    plt.title("Tracking with Time data (NM|hours)")
+    plt.title("Tracking with Time data (NM|%s)" % (timeunit))
     plt.ylabel("NM North-South from start")
     plt.xlabel("NM East-Weat from start")
     plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap='plasma')
-    plt.colorbar(label="Time (hours)")
+    plt.colorbar(label="Time (%s)" % (timeunit))
     plt.grid()
     #plt.show()
     
