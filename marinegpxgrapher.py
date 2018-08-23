@@ -36,14 +36,19 @@ def calctimedelta(data,pt1, pt2):
 """
     convert latitude and longitude to radians and return as tuple  these are really kind made up units so dont worry about the orientation
 """
-def convlatlon(lat, lon):
+def convlatlon(data):
     
-    latrad = np.radians(lat)
+    latrad = np.radians(data['data']['lat'])
 
-    lonrad = np.radians(lon * np.cos(latrad[0]))
+    data['data']['lonnm'] = np.radians(data['data']['lon'] * np.cos(latrad[0])) * earthrad
+    data['data']['latnm'] = latrad * earthrad
+
+    #Center on the first point
+    data['data']['latnm'] = data['data']['latnm'] - data['data']['latnm'][0]
+    data['data']['lonnm'] = data['data']['lonnm'] - data['data']['lonnm'][0]
 
 
-    return latrad,lonrad
+
 
 
 """
@@ -51,17 +56,8 @@ def convlatlon(lat, lon):
 """
 def calcdist(data,pt1, pt2):
         
-    return math.sqrt(math.pow(data['latrad'][pt1]-data['latrad'][pt2],2) + math.pow(data['lonrad'][pt1]-data['lonrad'][pt2],2)) * earthrad
+    return math.sqrt(math.pow(data['latnm'][pt1]-data['latnm'][pt2],2) + math.pow(data['lonnm'][pt1]-data['lonnm'][pt2],2))
     
-
-"""
-    Converts radian data to nautical miles offset from starting point.
-    Takes datastructure as input, modifies data structure
-    returns nothing
-"""
-def convrad2nm(data):
-    data['data']['latnm'] = (data['data']['latrad'] - data['data']['latrad'][0]) * earthrad
-    data['data']['lonnm'] = (data['data']['lonrad'] - data['data']['lonrad'][0]) * earthrad
 
 
 """
@@ -134,8 +130,12 @@ def loaddata(path):
         #There is no chance im going to use this since the wristwatch cant get accurate temp data anyway
         #fmtpt['temp'] = float(pt.getElementsByTagName("gpxx:Temperature")[0].firstChild.data)
 
-    #convert latlong to radians earth units (I made that up) and store
-    data['data']['latrad'], data['data']['lonrad'] = convlatlon(data['data']['lat'], data['data']['lon'])
+    #convert latlong to nm
+    convlatlon(data)
+
+
+    #convrad2nm(data)
+
 
     data['data']['speed'] = np.zeros(data['ptcount'])
     #calculate speed at all tracking p-oints but first later this could be fixed when command line options are added to constrain time
@@ -143,8 +143,6 @@ def loaddata(path):
 
     for i in range(data['ptcount']-1):
         data['data']['speed'][i+1] = calcspeed(data['data'], i, i+1)
-        
-    convrad2nm(data)
 
     return data
 
