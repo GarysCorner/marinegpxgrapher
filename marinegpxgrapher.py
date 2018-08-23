@@ -67,7 +67,9 @@ def convlatlon(data):
 """
 def loaddata(path):
 
-    print "Loading data from \"%s\"" % path
+    startloadtime = datetime.now()
+
+    print "Loading data from \"%s\"" % os.path.basename(path)
 
     data = {'filename':os.path.basename(path)}
     
@@ -128,12 +130,25 @@ def loaddata(path):
         data['data']['lon'][i] = float(gpxpts[i].getAttribute("lon"))
         data['data']['time'][i] = convdatetime(gpxpts[i].getElementsByTagName("time")[0].firstChild.data, starttime)
 
+    
+    totaltime = data['data']['time'][len(data['data']['time'])-1]
+
+    if totaltime > 9000:
+        print "Track elapsed time is: %f hours" % (totaltime / 3600.)
+
+    else:
+        print "Track elapsed time is: %f minutes" % (totaltime / 60.)
+
 
     #convert latlong to nautical mile offset
     convlatlon(data)
 
     #calc speeds
     calcspeed(data)
+
+    loadtime = datetime.now() - startloadtime
+
+    print "Track \"%s\" loaded (load time %i ms)!" % (os.path.basename(path), loadtime.seconds * 1000. + loadtime.microseconds/1000)
 
     return data
 
@@ -160,16 +175,16 @@ def plotdata(data):
 
     if data['data']['time'][len(data['data']['time'])-1] > 9000:
 
-        timeunit = "Hour"
+        timeunit = "hours"
         timedatahours = data['data']['time'] / 3600.
 
     else:
-        timeunit = "Minute"
+        timeunit = "minutes"
         timedatahours = data['data']['time'] / 60.
 
 
    
-    print "Plotting speed over time..."
+    print "Plotting speed over time (%s)..." % (timeunit)
 
     #plot speed/time
     fig, ax = plt.subplots()
@@ -180,7 +195,7 @@ def plotdata(data):
     plt.plot( timedatahours[1:],data['data']['speed'][1:])
     #plt.show()
 
-    print "Plotting tracking data with time in"
+    print "Plotting tracking data with time in %s" % (timeunit)
 
     #plot time data
     fig, ax = plt.subplots()
