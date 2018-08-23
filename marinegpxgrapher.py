@@ -21,15 +21,28 @@ earthrad = 3436.801
 """
     Calculate speed in nautical miles
 """
-def calcspeed(data, pt1,pt2):
-    return calcdist(data, pt1, pt2) / (calctimedelta(data, pt1, pt2) / 3600.)
+def calcspeed(data):
+
+    #The insert statement gives us a starting speed of zero and make sure the speed array has the same dimensions as the other arrays
+    data['data']['speed'] = np.insert(calcdist(data) / calctimedelta(data), 0, [0.0])
 
 
 """
     Calculate and return timedelta in hours as float of two points.  Enter points in the order in which they were recorded
 """
-def calctimedelta(data,pt1, pt2):
-    return data['time'][pt2] - data['time'][pt1]
+def calctimedelta(data):
+
+    return (data['data']['time'][1:] - data['data']['time'][:-1]) / 3600
+
+
+
+"""
+    Calculate distance between two points in nautical miles
+"""
+def calcdist(data):
+        
+    return np.sqrt(np.square(data['data']['latnm'][:-1] -data['data']['latnm'][1:]) + np.square(data['data']['lonnm'][:-1]-data['data']['lonnm'][1:]))
+    
 
 
 
@@ -46,18 +59,6 @@ def convlatlon(data):
     #Center on the first point
     data['data']['latnm'] = data['data']['latnm'] - data['data']['latnm'][0]
     data['data']['lonnm'] = data['data']['lonnm'] - data['data']['lonnm'][0]
-
-
-
-
-
-"""
-    Calculate distance between two points in nautical miles
-"""
-def calcdist(data,pt1, pt2):
-        
-    return math.sqrt(math.pow(data['latnm'][pt1]-data['latnm'][pt2],2) + math.pow(data['lonnm'][pt1]-data['lonnm'][pt2],2))
-    
 
 
 """
@@ -133,16 +134,7 @@ def loaddata(path):
     #convert latlong to nm
     convlatlon(data)
 
-
-    #convrad2nm(data)
-
-
-    data['data']['speed'] = np.zeros(data['ptcount'])
-    #calculate speed at all tracking p-oints but first later this could be fixed when command line options are added to constrain time
-    data['data']['speed'][0] = 0.0
-
-    for i in range(data['ptcount']-1):
-        data['data']['speed'][i+1] = calcspeed(data['data'], i, i+1)
+    calcspeed(data)
 
     return data
 
@@ -167,7 +159,10 @@ def plotdata(data):
     else:
         trkname = data['name']
 
+    timeunit = "Hours"
     timedatahours = data['data']['time'] / 3600.
+
+
    
     print "Plotting speed over time..."
 
