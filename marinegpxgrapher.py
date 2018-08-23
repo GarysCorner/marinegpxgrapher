@@ -123,6 +123,9 @@ def loaddata(path):
     data['ptcount'] = len(gpxpts)
     data['data'] = { 'lat': np.zeros(data['ptcount']), 'lon':np.zeros(data['ptcount']), 'time':np.zeros(data['ptcount']) }
 
+    #setup time converter
+    checkdtformat(gpxpts[0].getElementsByTagName("time")[0].firstChild.data)
+
     #go through and process all tracking points
     for i in range(data['ptcount']):
         
@@ -157,9 +160,40 @@ def loaddata(path):
     Convert Garmin UTC format to datetime object
 """
 def convdatetime(dtstr, starttime):
-    pttime = datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%SZ") - starttime
+    pttime = datetime.strptime(dtstr,convdatetime.format) - starttime
     return float(pttime.seconds + pttime.days*24*3600)
+
+"""
+    Check time format potential time formats and set convdatetime
+"""
+def checkdtformat(dtstr):
+
+    try:
+        datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%S.%f%z")
+        convdtformat.format =   "%Y-%m-%dT%H:%M:%S.%f%z"
+    except ValueError:
+
+        try:
+            datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%S.%fZ")
+            convdtformat.format =   "%Y-%m-%dT%H:%M:%S.%fZ"
+        except ValueError:
+
+            try:
+                datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%S%z")
+                convdtformat.format =   "%Y-%m-%dT%H:%M:%S%z"
+            except ValueError:
+
+                try:
+                    datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%SZ")
+                    convdatetime.format =   "%Y-%m-%dT%H:%M:%SZ"
     
+                except ValueError:
+                    print "No time format found for \"%s\" fatal error!" % (dtstr)
+
+                    exit(1)
+
+    print "Time format string found \"%s\"" % (convdatetime.format)
+
 
 """
     Graph all the data this is what you came here for
