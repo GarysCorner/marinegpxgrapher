@@ -30,6 +30,12 @@ import numpy as np
 from Tkinter import Tk
 import tkFileDialog
 import os
+import argparse
+
+#configuration data (probably command line)
+config = {  "hours":False,
+            "minutes":False
+        }
 
 #earths radius in nautical miles we will use this later
 earthrad = 3436.801
@@ -225,6 +231,8 @@ def plotdata(data):
     else:
         trkname = data['name']
 
+    
+
     if data['data']['time'][len(data['data']['time'])-1] > 9000:
 
         timeunit = "hours"
@@ -233,6 +241,19 @@ def plotdata(data):
     else:
         timeunit = "minutes"
         timedatahours = data['data']['time'] / 60.
+
+
+    #this is very ugly fix it
+    if config['hours']:
+
+        timeunit = "hours"
+        timedatahours = data['data']['time'] / 3600.
+
+    elif config['minutes']:
+        timeunit = "minutes"
+        timedatahours = data['data']['time'] / 60.
+
+
 
 
    
@@ -278,11 +299,30 @@ def plotdata(data):
     plt.show()
 
 
+"""
+    Parses the command line arguments
+"""
+def parsecmdline():
+    
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-H", "--hours",  help = "Force graphs to use hours instead of minutes", action="store_true")
+    parser.add_argument("-M", "--minutes" , help = "Force graphs to use minutes intead of hours", action="store_true")
+
+    args = parser.parse_args()
+    
+    if args.hours:
+        config['hours'] = True
+
+    if args.minutes:
+        config['minutes'] = True
+
+
 
 
 if __name__ == "__main__":
     
-    print "Starting..."
+    parsecmdline()
 
     #get filename
     root = Tk()
