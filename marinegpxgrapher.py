@@ -31,6 +31,7 @@ from Tkinter import Tk
 import tkFileDialog
 import os
 import argparse
+from xml.parsers.expat import error as xmlerror
 
 #configuration data (probably command line)
 config = {  "hours":False,
@@ -96,7 +97,15 @@ def loaddata(path):
 
     data = {'filename':os.path.basename(path)}
     
-    root = xml.parse(path)
+    try:
+        root = xml.parse(path)
+
+    except xmlerror:
+        print ""
+        print ""
+        print "***Fatal Error:  GPX file is not properly formated XML, sorry I cant help you with this***"
+        print "File: %s" % path
+        exit(2)
 
     #parse metadata
     #add some error checking here to since I dont know if this metadata is availble in all tracking file
