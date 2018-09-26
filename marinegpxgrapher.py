@@ -76,8 +76,11 @@ def calcdist(data):
 def convlatlon(data):
     
     latrad = np.radians(data['data']['lat'])
+    latmax = np.max(latrad)
+    latmin = np.min(latrad)
+    midlatrad = (latmax - latmin)/2. + latmin
 
-    data['data']['lonnm'] = np.radians(data['data']['lon'] * np.cos(latrad[0])) * earthrad
+    data['data']['lonnm'] = np.multiply(np.radians(data['data']['lon']), np.cos(midlatrad)) * earthrad
     data['data']['latnm'] = latrad * earthrad
 
     #Center on the first point
