@@ -35,7 +35,8 @@ from xml.parsers.expat import error as xmlerror
 
 #configuration data (probably command line)
 config = {  "hours":False,
-            "minutes":False
+            "minutes":False,
+            "filename":None
         }
 
 #earths radius in nautical miles we will use this later
@@ -109,6 +110,13 @@ def loaddata(path):
         print "***Fatal Error:  GPX file is not properly formated XML, sorry I cant help you with this***"
         print "File: %s" % path
         exit(2)
+
+    except IOError:
+        print ""
+        print ""
+        print "***Fatal Error:  Could not open file ***"
+        print "File: %s" % path
+        exit(5)
 
     #parse metadata
     #add some error checking here to since I dont know if this metadata is availble in all tracking file
@@ -316,10 +324,14 @@ def plotdata(data):
 """
 def parsecmdline():
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog="Marine GPX Grapher",
+                                     description="This program is designed to provide useful graphs of GPX tracking data from Garmin Quatix watches, though it should work with other files.  The program will display two graphs both of which show all of the tracking points as offsets for a zero position which is the first data point.  One graph will show the speed at each data point as color, and the other will show the time at each datapoint as color.  There is also a third graph showing speed with respect to time, however this is just for comparison.  Since this program is intended for marine data it does not take altitude into account.")
 
+    parser.add_argument("-f", "--file", help = "Open file", metavar = "filename", type = str)
     parser.add_argument("-H", "--hours",  help = "Force graphs to use hours instead of minutes", action="store_true")
     parser.add_argument("-M", "--minutes" , help = "Force graphs to use minutes intead of hours", action="store_true")
+    
+    
 
     args = parser.parse_args()
     
@@ -329,6 +341,9 @@ def parsecmdline():
     if args.minutes:
         config['minutes'] = True
 
+    if args.file:
+        config['filename'] = args.file
+
 
 
 
@@ -337,16 +352,22 @@ if __name__ == "__main__":
     parsecmdline()
 
     #get filename
-    root = Tk()
-    filename = tkFileDialog.askopenfilename()
-    root.destroy()
 
-    if filename == ():
-        print "Canceled"
-        exit(0)
+    if not config['filename']:
+
+        from Tkinter import Tk
+        import tkFileDialog
+        
+        root = Tk()
+        config['filename'] = tkFileDialog.askopenfilename()
+        root.destroy()
+
+        if config['filename'] == ():
+            print "Canceled"
+            exit(25)
 
     #for now just load the file we are working with
-    data = loaddata(filename)
+    data = loaddata(config['filename'])
 
    
 
