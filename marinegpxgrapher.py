@@ -350,8 +350,8 @@ def parsecmdline():
     parser.add_argument("-f", "--file", help = "Open file", metavar = "filename", type = str)
     parser.add_argument("-H", "--hours",  help = "Force graphs to use hours instead of minutes", action="store_true")
     parser.add_argument("-M", "--minutes" , help = "Force graphs to use minutes intead of hours", action="store_true")
-    parser.add_argument("-cs", "--speedcmap", help = "Colormap for speed graph", type = str)
-    parser.add_argument("-ct", "--timecmap", help = "Colormap for time graph", type = str)
+    parser.add_argument("-cs", "--speedcmap", help = "Colormap for speed graph", metavar = "colormap", type = str)
+    parser.add_argument("-ct", "--timecmap", help = "Colormap for time graph", metavar = " colormap", type = str)
 
     args = parser.parse_args()
 
@@ -376,7 +376,9 @@ def parsecmdline():
         print ""
         print ""
 
-        print allcolormaps
+        for i in allcolormaps:
+            if i[0] != '_':
+                print i + "\t",
 
         print ""
         print ""
