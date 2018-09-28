@@ -338,6 +338,14 @@ def plotdata(data):
     
     plt.show()
 
+"""
+    Displays list of valid colormaps
+"""
+def showcolormaps():
+    allcolormaps = dir(colormaps)
+    for i in allcolormaps:
+        if i[0] != '_':
+            print i + "\t",
 
 """
     Parses the command line arguments
@@ -353,7 +361,13 @@ def parsecmdline():
     parser.add_argument("-cs", "--speedcmap", help = "Colormap for speed graph", metavar = "colormap", type = str)
     parser.add_argument("-ct", "--timecmap", help = "Colormap for time graph", metavar = " colormap", type = str)
 
+    parser.add_argument("-sc","--showcolormaps", help = "Displays a list of colormaps", action="store_true")
+
     args = parser.parse_args()
+
+    if args.showcolormaps:
+        showcolormaps()
+        exit(0)
 
     if args.speedcmap:
         config['speedcmap'] = args.speedcmap
@@ -376,9 +390,7 @@ def parsecmdline():
         print ""
         print ""
 
-        for i in allcolormaps:
-            if i[0] != '_':
-                print i + "\t",
+        showcolormaps()
 
         print ""
         print ""
