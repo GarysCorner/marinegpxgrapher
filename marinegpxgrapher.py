@@ -21,12 +21,29 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#catch error if matplotlib or numpy arent installed
+try:
+    from matplotlib.ticker import FuncFormatter
+    import matplotlib.pyplot as plt
+except ImportError:
+    print ""
+    print ""
+    print "You don't have matplotlib installed, you need to install it.  Go to the address below.  Error 6"
+    print "https://matplotlib.org/users/installing.html"
+    exit(6)
+
+try:
+    import numpy as np
+except ImportError:
+    print ""
+    print ""
+    print "You don't have numpy installed, you need to install it.  Go to the address below Error 7"
+    print "https://docs.scipy.org/doc/numpy/user/install.html"
+    exit(7)
+
 import math
 from datetime import datetime
 import xml.dom.minidom as xml
-import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
-import numpy as np
 from Tkinter import Tk
 import tkFileDialog
 import os
@@ -354,9 +371,15 @@ if __name__ == "__main__":
     #get filename
 
     if not config['filename']:
-
-        from Tkinter import Tk
-        import tkFileDialog
+        try:
+            from Tkinter import Tk
+            import tkFileDialog
+        except ImportError:
+            print ""
+            print ""
+            print "You don't have Tkinter installed, this can be installed with python 2.x.  Try reinstalling python 2.x.  Error 8"
+            print "If you run the program with the -f [--file] option and specify a filename this error will be bypassed!!!"
+            exit(8)
         
         root = Tk()
         config['filename'] = tkFileDialog.askopenfilename()
