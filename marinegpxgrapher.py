@@ -21,10 +21,27 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+#configuration data (probably command line)
+config = {  "hours":False,
+            "minutes":False,
+            "filename":None,
+            "timecmap":"plasma",
+            "speedcmap":"gnuplot2"
+        }
+
+
 #catch error if matplotlib or numpy arent installed
+
+import math
+from datetime import datetime
+import xml.dom.minidom as xml
+import os
+import argparse
+from xml.parsers.expat import error as xmlerror
 try:
     from matplotlib.ticker import FuncFormatter
     import matplotlib.pyplot as plt
+    from matplotlib import cm as colormaps
 except ImportError:
     print ""
     print ""
@@ -41,20 +58,6 @@ except ImportError:
     print "https://docs.scipy.org/doc/numpy/user/install.html"
     exit(7)
 
-import math
-from datetime import datetime
-import xml.dom.minidom as xml
-from Tkinter import Tk
-import tkFileDialog
-import os
-import argparse
-from xml.parsers.expat import error as xmlerror
-
-#configuration data (probably command line)
-config = {  "hours":False,
-            "minutes":False,
-            "filename":None
-        }
 
 #earths radius in nautical miles we will use this later
 earthrad = 3436.801
@@ -314,7 +317,7 @@ def plotdata(data):
     plt.title("Tracking with Time as color")
     plt.ylabel("NM North-South from start")
     plt.xlabel("NM West-East from start")
-    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap='plasma')
+    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap=config['timecmap'])
     plt.colorbar(label="Time (%s)" % (timeunit))
     plt.grid()
     #plt.show()
@@ -327,7 +330,7 @@ def plotdata(data):
     plt.title("Tracking with speed as color")
     plt.ylabel("NM North-South from start")
     plt.xlabel("NM West-East from start")
-    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap='gnuplot2')
+    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap=config['speedcmap'])
     plt.colorbar(label="Speed (knots)")
     plt.grid()
     
@@ -347,10 +350,16 @@ def parsecmdline():
     parser.add_argument("-f", "--file", help = "Open file", metavar = "filename", type = str)
     parser.add_argument("-H", "--hours",  help = "Force graphs to use hours instead of minutes", action="store_true")
     parser.add_argument("-M", "--minutes" , help = "Force graphs to use minutes intead of hours", action="store_true")
-    
-    
+    parser.add_argument("-cs", "--speedcmap", help = "Colormap for speed graph", type = str)
+    parser.add_argument("-ct", "--timecmap", help = "Colormap for time graph", type = str)
 
     args = parser.parse_args()
+
+    if args.speedcmap:
+        config['speedcmap'] = args.speedcmap
+
+    if args.timecmap:
+        config['timecmap'] = args.timecmap
     
     if args.hours:
         config['hours'] = True
@@ -361,7 +370,22 @@ def parsecmdline():
     if args.file:
         config['filename'] = args.file
 
+    #Check to make sure a valid colormap is set
+    allcolormaps = dir(colormaps)
+    if not (config['speedcmap'] in allcolormaps and config['timecmap'] in allcolormaps):
+        print ""
+        print ""
 
+        print allcolormaps
+
+        print ""
+        print ""
+        
+        print "Bad colormap selected.  You need to selected a valid colormap from above (Error 10)"
+        print "Better yet go to https://matplotlib.org/examples/color/colormaps_reference.html"
+        
+        
+        exit(10)
 
 
 if __name__ == "__main__":
