@@ -179,7 +179,13 @@ def loaddata(path):
 
     gpxpts = root.getElementsByTagName("trkpt")
 
+    #I am concerned about how len(gpxpts) is handled and weather it could cause performance issues
     print "Found %i points of tracking data" % (len(gpxpts))
+    if len(gpxpts) == 0:
+        print ""
+        print ""
+        print "File (%s) contains no tracking points, program can not continue!"
+        exit(100)
 
     starttime = datetime.strptime(gpxpts[0].getElementsByTagName("time")[0].firstChild.data, "%Y-%m-%dT%H:%M:%SZ") 
     
