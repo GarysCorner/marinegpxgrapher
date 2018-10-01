@@ -26,7 +26,7 @@ config = {  "hours":False,
             "minutes":False,
             "filename":None,
             "timecmap":"plasma",
-            "speedcmap":"gnuplot2"
+            "speedcmap":"gist_ncar"
         }
 
 
