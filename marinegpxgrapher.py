@@ -26,7 +26,12 @@ config = {  "hours":False,
             "minutes":False,
             "filename":None,
             "timecmap":"plasma",
-            "speedcmap":"gist_ncar"
+            "speedcmap":"gist_ncar",
+            "figsize":(6,6),
+            "showall":True,
+            "showspeed":False,
+            "showtime":False,
+            "showhist":False
         }
 
 
@@ -42,6 +47,7 @@ try:
     from matplotlib.ticker import FuncFormatter
     import matplotlib.pyplot as plt
     from matplotlib import cm as colormaps
+    
 except ImportError:
     print ""
     print ""
@@ -301,46 +307,50 @@ def plotdata(data):
 
 
 
-
+    if config['showhist']:
    
-    print "Plotting speed over time (%s)..." % (timeunit)
+        print "Plotting speed over time (%s)..." % (timeunit)
 
-    #plot speed/time
-    fig, ax = plt.subplots()
-    fig.canvas.set_window_title(trkname)
-    plt.title("Speed / time (knots/%s)" % (timeunit))
-    plt.xlabel(timeunit)
-    plt.ylabel("Speed (knots)")
-    plt.plot( timedatahours[1:],data['data']['speed'][1:])
-    #plt.show()
+        #plot speed/time    
+        fig, ax = plt.subplots(figsize=config['figsize'])
+        fig.canvas.set_window_title(trkname)
+        plt.title("Speed / time (knots/%s)" % (timeunit))
+        plt.xlabel(timeunit)
+        plt.ylabel("Speed (knots)")
+        plt.plot( timedatahours[1:],data['data']['speed'][1:])
+        #plt.show()
 
-    print "Plotting tracking data with time in %s" % (timeunit)
+    if config['showtime']:
 
-    #plot time data
-    fig, ax = plt.subplots()
-    fig.canvas.set_window_title(trkname)
-    ax.set_aspect('equal')
-    plt.title("Tracking with Time as color")
-    plt.ylabel("NM North-South from start")
-    plt.xlabel("NM West-East from start")
-    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap=config['timecmap'])
-    plt.colorbar(label="Time (%s)" % (timeunit))
-    plt.grid()
-    #plt.show()
+        print "Plotting tracking data with time in %s" % (timeunit)
+        
+        #plot time data
+        fig, ax = plt.subplots(figsize=config['figsize'])
+        fig.canvas.set_window_title(trkname)
+        ax.set_aspect('equal')
+        plt.title("Tracking with Time as color")
+        plt.ylabel("NM North-South from start")
+        plt.xlabel("NM West-East from start")
+        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap=config['timecmap'])
+        plt.colorbar(label="Time (%s)" % (timeunit))
+        plt.grid()
+        #plt.show()
     
-    print "Plotting tracking data with speed it nautical miles per hour"
-
-    fig, ax = plt.subplots()
-    fig.canvas.set_window_title(trkname)
-    ax.set_aspect('equal')
-    plt.title("Tracking with speed as color")
-    plt.ylabel("NM North-South from start")
-    plt.xlabel("NM West-East from start")
-    plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap=config['speedcmap'])
-    plt.colorbar(label="Speed (knots)")
-    plt.grid()
+    if config['showspeed']:
     
-    print "The graphs may be displayed one in front of the other!"
+        print "Plotting tracking data with speed it nautical miles per hour"
+
+        fig, ax = plt.subplots(figsize=config['figsize'])
+        fig.canvas.set_window_title(trkname)
+        ax.set_aspect('equal')
+        plt.title("Tracking with speed as color")
+        plt.ylabel("NM North-South from start")
+        plt.xlabel("NM West-East from start")
+        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap=config['speedcmap'])
+        plt.colorbar(label="Speed (knots)")
+        plt.grid()
+    
+        print "The graphs may be displayed one in front of the other!"
     
     plt.show()
 
@@ -364,10 +374,18 @@ def parsecmdline():
     parser.add_argument("-f", "--file", help = "Open file", metavar = "filename", type = str)
     parser.add_argument("-H", "--hours",  help = "Force graphs to use hours instead of minutes", action="store_true")
     parser.add_argument("-M", "--minutes" , help = "Force graphs to use minutes intead of hours", action="store_true")
+    
+    parser.add_argument("-gs", "--graphspeed" , help = "Show speed graph", action="store_true")
+    parser.add_argument("-gt", "--graphtime" , help = "Show time graph", action="store_true")
+    parser.add_argument("-gh", "--graphhist" , help = "Show speed history graph", action="store_true")
+    
     parser.add_argument("-cs", "--speedcmap", help = "Colormap for speed graph", metavar = "colormap", type = str)
     parser.add_argument("-ct", "--timecmap", help = "Colormap for time graph", metavar = " colormap", type = str)
-
     parser.add_argument("-sc","--showcolormaps", help = "Displays a list of colormaps", action="store_true")
+    parser.add_argument("-s","--size", help="Sets the figure size (X & Y) in inches", metavar="inches", type=int)
+    parser.add_argument("-sx", "--xsize", help="Sets the size in inches for the X axis", metavar="inches", type=int)
+    parser.add_argument("-sy", "--ysize", help="Sets the size in inches for the Y axis", metavar="inches", type=int)
+    
 
     args = parser.parse_args()
 
@@ -389,6 +407,38 @@ def parsecmdline():
 
     if args.file:
         config['filename'] = args.file
+    
+    if args.size:
+        config['figsize'] = (args.size, args.size)
+        
+    if args.xsize:
+        listfigsize = list(config['figsize'])
+        listfigsize[0] = args.xsize
+        config['figsize'] = tuple(listfigsize)
+        
+    if args.ysize:
+        listfigsize = list(config['figsize'])
+        listfigsize[1] = args.ysize
+        config['figsize'] = tuple(listfigsize)
+        
+    if args.graphspeed:
+        config['showall'] = False
+        config['showspeed'] = True
+    
+    if args.graphtime:
+        config['showall'] = False
+        config['showtime'] = True
+        
+    if args.graphhist:
+        config['showall'] = False
+        config['showhist'] = True
+        
+    if config['showall']:
+        config['showtime'] = True
+        config['showspeed'] = True
+        config['showhist'] = True
+        
+
 
     #Check to make sure a valid colormap is set
     allcolormaps = dir(colormaps)
