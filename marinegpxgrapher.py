@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 #File:		marinegpxgrapher.py
 #Author:	Gary Bezet
 #Date:		2018-07-29
@@ -193,13 +193,13 @@ def loaddata(path):
         print("File (%s) contains no tracking points, program can not continue!")
         exit(100)
 
-    starttime = datetime.strptime(gpxpts[0].getElementsByTagName("time")[0].firstChild.data, "%Y-%m-%dT%H:%M:%SZ") 
-    
     data['ptcount'] = len(gpxpts)
     data['data'] = { 'lat': np.zeros(data['ptcount']), 'lon':np.zeros(data['ptcount']), 'time':np.zeros(data['ptcount']) }
 
     #setup time converter
     checkdtformat(gpxpts[0].getElementsByTagName("time")[0].firstChild.data)
+    
+    starttime = datetime.strptime(gpxpts[0].getElementsByTagName("time")[0].firstChild.data, config['datetimeformat']) 
 
     #go through and process all tracking points
     for i in range(data['ptcount']):
@@ -235,7 +235,7 @@ def loaddata(path):
     Convert Garmin UTC format to datetime object
 """
 def convdatetime(dtstr, starttime):
-    pttime = datetime.strptime(dtstr,convdatetime.format) - starttime
+    pttime = datetime.strptime(dtstr,config['datetimeformat']) - starttime
     return float(pttime.seconds + pttime.days*24*3600)
 
 """
@@ -243,32 +243,24 @@ def convdatetime(dtstr, starttime):
 """
 def checkdtformat(dtstr):
 
-    try:
-        datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%S.%f%z")
-        convdtformat.format =   "%Y-%m-%dT%H:%M:%S.%f%z"
-    except ValueError:
-
-        try:
-            datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%S.%fZ")
-            convdtformat.format =   "%Y-%m-%dT%H:%M:%S.%fZ"
-        except ValueError:
-
-            try:
-                datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%S%z")
-                convdtformat.format =   "%Y-%m-%dT%H:%M:%S%z"
-            except ValueError:
-
-                try:
-                    datetime.strptime(dtstr,"%Y-%m-%dT%H:%M:%SZ")
-                    convdatetime.format =   "%Y-%m-%dT%H:%M:%SZ"
+    format_strings = ["%Y-%m-%dT%H:%M:%S.%f%z","%Y-%m-%dT%H:%M:%S.%fZ","%Y-%m-%dT%H:%M:%S%z","%Y-%m-%dT%H:%M:%SZ"]
+    config['datetimeformat'] = None
     
-                except ValueError:
-                    print("No valid time format found for \"%s\" fatal error!" % (dtstr))
-                    print("Please report this error at https://github.com/GarysCorner/marinegpxgrapher/issues")
+    for idx, fstr in enumerate( format_strings ):
+        try:
+            datetime.strptime(dtstr,fstr)
+            config['datetimeformat'] =   fstr
+            break
+            
+        except ValueError:
+            if idx == (len(format_strings) - 1):
 
-                    exit(1)
+                print("No valid time format found for \"%s\" fatal error!" % (dtstr))
+                print("Please report this error at https://github.com/GarysCorner/marinegpxgrapher/issues")
 
-    print("Time format string found \"%s\"" % (convdatetime.format))
+                exit(1)
+
+    print("Time format string found \"%s\"" % (config['datetimeformat']))
 
 
 """
