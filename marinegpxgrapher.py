@@ -88,7 +88,6 @@ def calcspeed_rollavg(data, pts):
     for idx in range(pts,data['data']['speed'].shape[0]):
         data['data']['speedavg'][idx] = np.mean(data['data']['speed'][idx-pts:idx])
         
-    print(data['data']['speedavg'][:20])
 
     
 """
