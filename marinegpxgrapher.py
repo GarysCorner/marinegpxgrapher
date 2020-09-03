@@ -79,6 +79,19 @@ def calcspeed(data):
 
 
 """
+    Why did I put my comments here?
+    Calculate thr olling averge of speed
+"""
+def calcspeed_rollavg(data, pts):
+    data['data']['speedavg'] = np.zeros(data['data']['speed'].shape[0], dtype=np.float)
+    data['data']['speedavg'][:pts] = np.mean(data['data']['speed'][:pts-1]) # set the first points to their average for simplicity
+    for idx in range(pts,data['data']['speed'].shape[0]):
+        data['data']['speedavg'][idx] = np.mean(data['data']['speed'][idx-pts:idx])
+        
+    print(data['data']['speedavg'][:20])
+
+    
+"""
     Calculate and return timedelta in hours as float of two points.  Enter points in the order in which they were recorded
 """
 def calctimedelta(data):
@@ -223,6 +236,9 @@ def loaddata(path):
 
     #calc speeds
     calcspeed(data)
+    
+    #calc speed rolling avg
+    calcspeed_rollavg(data,config['rollavg_points'])
 
     loadtime = datetime.now() - startloadtime
 
@@ -306,10 +322,11 @@ def plotdata(data):
         #plot speed/time    
         fig, ax = plt.subplots(figsize=config['figsize'])
         fig.canvas.set_window_title(trkname)
-        plt.title("Speed / time (knots/%s)" % (timeunit))
+        plt.suptitle("Speed / time (knots/%s)" % (timeunit))
+        plt.title("(%d point rolling average)" % config['rollavg_points'], fontsize='small')
         plt.xlabel(timeunit)
         plt.ylabel("Speed (knots)")
-        plt.plot( timedatahours[1:],data['data']['speed'][1:])
+        plt.plot( timedatahours[config['rollavg_points']:],data['data']['speedavg'][config['rollavg_points']:])
         #plt.show()
 
     if config['showtime']:
@@ -369,7 +386,8 @@ def parsecmdline():
     
     parser.add_argument("-gs", "--graphspeed" , help = "Show speed graph", action="store_true")
     parser.add_argument("-gt", "--graphtime" , help = "Show time graph", action="store_true")
-    parser.add_argument("-gh", "--graphhist" , help = "Show speed history graph", action="store_true")
+    parser.add_argument("-gh", "--graphhist" , help = "Show speed history graph (rolling average)", action="store_true")
+    parser.add_argument("-ra", "--rollavgpts" , help = "The number of points to use for rolling average (default 20)" , metavar="points", type=int)
     
     parser.add_argument("-cs", "--speedcmap", help = "Colormap for speed graph", metavar = "colormap", type = str)
     parser.add_argument("-ct", "--timecmap", help = "Colormap for time graph", metavar = " colormap", type = str)
@@ -378,6 +396,7 @@ def parsecmdline():
     parser.add_argument("-sx", "--xsize", help="Sets the size in inches for the X axis", metavar="inches", type=int)
     parser.add_argument("-sy", "--ysize", help="Sets the size in inches for the Y axis", metavar="inches", type=int)
     
+    
 
     args = parser.parse_args()
 
@@ -385,6 +404,12 @@ def parsecmdline():
         showcolormaps()
         exit(0)
 
+    if args.rollavgpts:
+        config['rollavg_points'] = args.rollavgpts
+    
+    else:
+        config['rollavg_points'] = 20
+        
     if args.speedcmap:
         config['speedcmap'] = args.speedcmap
 
