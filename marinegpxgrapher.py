@@ -108,23 +108,24 @@ def calcdist(data):
     
 
 
-
 """
-    convert latitude and longitude to radians and return as tuple  these are really kind made up units so dont worry about the orientation
+convert lat and long to offset from orgin using Haversine
 """
-def convlatlon(data):
+def havconvlatlon(data):
+    
+    
+    
     
     latrad = np.radians(data['data']['lat'])
-    latmax = np.max(latrad)
-    latmin = np.min(latrad)
-    midlatrad = (latmax - latmin)/2. + latmin
-
-    data['data']['lonnm'] = np.multiply(np.radians(data['data']['lon']), np.cos(midlatrad)) * earthrad
+    lonrad = np.radians(data['data']['lon'])
     data['data']['latnm'] = latrad * earthrad
-
-    #Center on the first point
     data['data']['latnm'] = data['data']['latnm'] - data['data']['latnm'][0]
-    data['data']['lonnm'] = data['data']['lonnm'] - data['data']['lonnm'][0]
+    
+    data['data']['lonnm'] = ((lonrad-lonrad[0]) * np.cos(latrad)) * earthrad
+    
+    
+    #data['data']['lonnm'] = data['data']['lonnm'] - data['data']['lonnm'][0]
+
 
 
 """
@@ -231,7 +232,8 @@ def loaddata(path):
 
 
     #convert latlong to nautical mile offset
-    convlatlon(data)
+    #convlatlon(data)
+    havconvlatlon(data)
 
     #calc speeds
     calcspeed(data)
