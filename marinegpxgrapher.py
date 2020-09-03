@@ -49,19 +49,19 @@ try:
     from matplotlib import cm as colormaps
     
 except ImportError:
-    print ""
-    print ""
-    print "You don't have matplotlib installed, you need to install it.  Go to the address below.  Error 6"
-    print "https://matplotlib.org/users/installing.html"
+    print("")
+    print("")
+    print("You don't have matplotlib installed, you need to install it.  Go to the address below.  Error 6")
+    print("https://matplotlib.org/users/installing.html")
     exit(6)
 
 try:
     import numpy as np
 except ImportError:
-    print ""
-    print ""
-    print "You don't have numpy installed, you need to install it.  Go to the address below Error 7"
-    print "https://docs.scipy.org/doc/numpy/user/install.html"
+    print("")
+    print("")
+    print("You don't have numpy installed, you need to install it.  Go to the address below Error 7")
+    print("https://docs.scipy.org/doc/numpy/user/install.html")
     exit(7)
 
 
@@ -123,7 +123,7 @@ def loaddata(path):
 
     startloadtime = datetime.now()
 
-    print "Loading data from \"%s\"" % os.path.basename(path)
+    print("Loading data from \"%s\"" % os.path.basename(path))
 
     data = {'filename':os.path.basename(path)}
     
@@ -131,17 +131,17 @@ def loaddata(path):
         root = xml.parse(path)
 
     except xmlerror:
-        print ""
-        print ""
-        print "***Fatal Error:  GPX file is not properly formated XML, sorry I cant help you with this***"
-        print "File: %s" % path
+        print("")
+        print("")
+        print("***Fatal Error:  GPX file is not properly formated XML, sorry I cant help you with this***")
+        print("File: %s" % path)
         exit(2)
 
     except IOError:
-        print ""
-        print ""
-        print "***Fatal Error:  Could not open file ***"
-        print "File: %s" % path
+        print("")
+        print("")
+        print("***Fatal Error:  Could not open file ***")
+        print("File: %s" % path)
         exit(5)
 
     #parse metadata
@@ -150,10 +150,10 @@ def loaddata(path):
     trk = root.getElementsByTagName("trk")
     if len(trk) > 0 and len(trk[0].getElementsByTagName("name")) == 1:
         data['name'] = trk[0].getElementsByTagName("name")[0].firstChild.data
-        print "Track title: ", data['name']
+        print("Track title: ", data['name'])
 
     else:
-        print "Track has no name"
+        print("Track has no name")
         data['name'] = None
 
 
@@ -163,7 +163,7 @@ def loaddata(path):
        
         if len(metadata.getElementsByTagName("time")) == 1:
             data['time'] = metadata.getElementsByTagName("time")[0].firstChild.data 
-            print "Track recorded at %s with" % ( data['time'] )
+            print("Track recorded at %s with" % ( data['time'] ))
 
 
             if len(metadata.getElementsByTagName("bounds")) == 1:
@@ -174,23 +174,23 @@ def loaddata(path):
                 data['minlat'] = bounds.getAttribute('minlat')
                 data['minlon'] = bounds.getAttribute('minlon')
         
-                print "\tMaximum/Minimum Latitude:\t%s\t/\t%s" % ( data['maxlat'], data['minlat'] )
-                print "\tMaximum/Minimum Longitude:\t%s\t/\t%s" % ( data['maxlon'], data['minlon'] ) 
+                print("\tMaximum/Minimum Latitude:\t%s\t/\t%s" % ( data['maxlat'], data['minlat'] ))
+                print("\tMaximum/Minimum Longitude:\t%s\t/\t%s" % ( data['maxlon'], data['minlon'] )) 
 
     else:
-        print "Metadata not found continuing"
+        print("Metadata not found continuing")
     
-    print "Track has %i segments" % len(root.getElementsByTagName("trkseg"))
+    print("Track has %i segments" % len(root.getElementsByTagName("trkseg")))
 
 
     gpxpts = root.getElementsByTagName("trkpt")
 
     #I am concerned about how len(gpxpts) is handled and weather it could cause performance issues
-    print "Found %i points of tracking data" % (len(gpxpts))
+    print("Found %i points of tracking data" % (len(gpxpts)))
     if len(gpxpts) == 0:
-        print ""
-        print ""
-        print "File (%s) contains no tracking points, program can not continue!"
+        print("")
+        print("")
+        print("File (%s) contains no tracking points, program can not continue!")
         exit(100)
 
     starttime = datetime.strptime(gpxpts[0].getElementsByTagName("time")[0].firstChild.data, "%Y-%m-%dT%H:%M:%SZ") 
@@ -212,10 +212,10 @@ def loaddata(path):
     totaltime = data['data']['time'][len(data['data']['time'])-1]
 
     if totaltime > 9000:
-        print "Track elapsed time is: %f hours" % (totaltime / 3600.)
+        print("Track elapsed time is: %f hours" % (totaltime / 3600.))
 
     else:
-        print "Track elapsed time is: %f minutes" % (totaltime / 60.)
+        print("Track elapsed time is: %f minutes" % (totaltime / 60.))
 
 
     #convert latlong to nautical mile offset
@@ -226,7 +226,7 @@ def loaddata(path):
 
     loadtime = datetime.now() - startloadtime
 
-    print "Track \"%s\" loaded (load time %i ms)!" % (os.path.basename(path), loadtime.seconds * 1000. + loadtime.microseconds/1000)
+    print("Track \"%s\" loaded (load time %i ms)!" % (os.path.basename(path), loadtime.seconds * 1000. + loadtime.microseconds/1000))
 
     return data
 
@@ -263,12 +263,12 @@ def checkdtformat(dtstr):
                     convdatetime.format =   "%Y-%m-%dT%H:%M:%SZ"
     
                 except ValueError:
-                    print "No valid time format found for \"%s\" fatal error!" % (dtstr)
-                    print "Please report this error at https://github.com/GarysCorner/marinegpxgrapher/issues"
+                    print("No valid time format found for \"%s\" fatal error!" % (dtstr))
+                    print("Please report this error at https://github.com/GarysCorner/marinegpxgrapher/issues")
 
                     exit(1)
 
-    print "Time format string found \"%s\"" % (convdatetime.format)
+    print("Time format string found \"%s\"" % (convdatetime.format))
 
 
 """
@@ -309,7 +309,7 @@ def plotdata(data):
 
     if config['showhist']:
    
-        print "Plotting speed over time (%s)..." % (timeunit)
+        print("Plotting speed over time (%s)..." % (timeunit))
 
         #plot speed/time    
         fig, ax = plt.subplots(figsize=config['figsize'])
@@ -322,7 +322,7 @@ def plotdata(data):
 
     if config['showtime']:
 
-        print "Plotting tracking data with time in %s" % (timeunit)
+        print("Plotting tracking data with time in %s" % (timeunit))
         
         #plot time data
         fig, ax = plt.subplots(figsize=config['figsize'])
@@ -338,7 +338,7 @@ def plotdata(data):
     
     if config['showspeed']:
     
-        print "Plotting tracking data with speed it nautical miles per hour"
+        print("Plotting tracking data with speed it nautical miles per hour")
 
         fig, ax = plt.subplots(figsize=config['figsize'])
         fig.canvas.set_window_title(trkname)
@@ -350,7 +350,7 @@ def plotdata(data):
         plt.colorbar(label="Speed (knots)")
         plt.grid()
     
-        print "The graphs may be displayed one in front of the other!"
+        print("The graphs may be displayed one in front of the other!")
     
     plt.show()
 
@@ -361,7 +361,7 @@ def showcolormaps():
     allcolormaps = dir(colormaps)
     for i in allcolormaps:
         if i[0] != '_':
-            print i + "\t",
+            print(i + "\t", end=' ')
 
 """
     Parses the command line arguments
@@ -443,16 +443,16 @@ def parsecmdline():
     #Check to make sure a valid colormap is set
     allcolormaps = dir(colormaps)
     if not (config['speedcmap'] in allcolormaps and config['timecmap'] in allcolormaps):
-        print ""
-        print ""
+        print("")
+        print("")
 
         showcolormaps()
 
-        print ""
-        print ""
+        print("")
+        print("")
         
-        print "Bad colormap selected.  You need to selected a valid colormap from above (Error 10)"
-        print "Better yet go to https://matplotlib.org/examples/color/colormaps_reference.html"
+        print("Bad colormap selected.  You need to selected a valid colormap from above (Error 10)")
+        print("Better yet go to https://matplotlib.org/examples/color/colormaps_reference.html")
         
         
         exit(10)
@@ -466,21 +466,21 @@ if __name__ == "__main__":
 
     if not config['filename']:
         try:
-            from Tkinter import Tk
-            import tkFileDialog
+            from tkinter import Tk
+            import tkinter.filedialog
         except ImportError:
-            print ""
-            print ""
-            print "You don't have Tkinter installed, this can be installed with python 2.x.  Try reinstalling python 2.x.  Error 8"
-            print "If you run the program with the -f [--file] option and specify a filename this error will be bypassed!!!"
+            print("")
+            print("")
+            print("You don't have Tkinter installed, this can be installed with python 2.x.  Try reinstalling python 2.x.  Error 8")
+            print("If you run the program with the -f [--file] option and specify a filename this error will be bypassed!!!")
             exit(8)
         
         root = Tk()
-        config['filename'] = tkFileDialog.askopenfilename()
+        config['filename'] = tkinter.filedialog.askopenfilename()
         root.destroy()
 
         if config['filename'] == ():
-            print "Canceled"
+            print("Canceled")
             exit(25)
 
     #for now just load the file we are working with
