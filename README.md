@@ -5,6 +5,8 @@ Site/Org: GarysCorner.NET
 Email:    marinegpx@garyscorner.net
 ```
 
+Now for Python 3.x
+
 ## Description
 (This was written before taking data science classes so, keep that in perspective)
 
