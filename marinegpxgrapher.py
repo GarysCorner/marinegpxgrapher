@@ -129,7 +129,7 @@ def havconvlatlon(data,frame='data'):
 Load waypoints
 """
 def loadmarkfiles(data):
-    waypoints = []
+    waypoints = set()
     totaldropped = 0
     
     for filename in data['markfiles']:
@@ -169,7 +169,7 @@ def loadmarkfiles(data):
                 
                 datapoint = (float(w.getAttribute('lat')), float(w.getAttribute('lon')),nameelm[0].firstChild.data)
                 if (not config['filterwaypoints']) or (datapoint[0] > np.min(data['data']['lat']) and datapoint[0] < np.max(data['data']['lat']) and datapoint[1] > np.min(data['data']['lon']) and datapoint[1] < np.max(data['data']['lon'])):
-                    waypoints.append(datapoint)
+                    waypoints.add(datapoint)
                 else:
                     droppedinfile += 1
                 
@@ -552,7 +552,7 @@ def parsecmdline():
         config['showhist'] = True
     
     if args.markfile:
-        config['markfiles'] = args.markfile
+        config['markfiles'] = set(args.markfile)
     else:
         config['markfiles'] = None
     
