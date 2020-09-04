@@ -111,23 +111,103 @@ def calcdist(data):
 """
 convert lat and long to offset from orgin using Haversine
 """
-def havconvlatlon(data):
+def havconvlatlon(data,frame='data'):
     
     
+    latrad = np.radians(data[frame]['lat'])
+    lonrad = np.radians(data[frame]['lon'])
+    data[frame]['latnm'] = latrad * earthrad
+    data[frame]['latnm'] = data[frame]['latnm'] - data[frame]['latnm'][0]
     
-    
-    latrad = np.radians(data['data']['lat'])
-    lonrad = np.radians(data['data']['lon'])
-    data['data']['latnm'] = latrad * earthrad
-    data['data']['latnm'] = data['data']['latnm'] - data['data']['latnm'][0]
-    
-    data['data']['lonnm'] = ((lonrad-lonrad[0]) * np.cos(latrad)) * earthrad
+    data[frame]['lonnm'] = ((lonrad-lonrad[0]) * np.cos(latrad)) * earthrad
     
     
     #data['data']['lonnm'] = data['data']['lonnm'] - data['data']['lonnm'][0]
 
+    
+"""
+Load waypoints
+"""
+def loadmarkfiles(data):
+    waypoints = []
+    totaldropped = 0
+    
+    for filename in data['markfiles']:
+        print("Loading mark data from \"%s\"" % os.path.basename(filename))
 
+        droppedinfile = 0
 
+        try:
+            root = xml.parse(filename)
+
+        except xmlerror:
+            print("")
+            print("")
+            print("***Fatal Error:  mark GPX file is not properly formated XML, sorry I cant help you with this***")
+            print("File: %s" % filename)
+            exit(8)
+
+        except IOError:
+            print("")
+            print("")
+            print("***Fatal Error:  Could not open mark file ***")
+            print("File: %s" % filename)
+            exit(9)
+
+        wpt = root.getElementsByTagName("wpt")
+        if len(wpt) == 0:
+            print("***Warning, no waypoints in %s***" % filename)
+        
+        wptcountfile = 0
+        for w in wpt:
+            nameelm = w.getElementsByTagName('name')
+            if not (w.hasAttribute('lat') and w.hasAttribute('lon') and len(nameelm) == 1):
+                print("***Warning, some waypoints missing data [%s] dropping***" % filename)
+                droppedinfile += 1
+                
+            else:
+                
+                datapoint = (float(w.getAttribute('lat')), float(w.getAttribute('lon')),nameelm[0].firstChild.data)
+                if (not config['filterwaypoints']) or (datapoint[0] > np.min(data['data']['lat']) and datapoint[0] < np.max(data['data']['lat']) and datapoint[1] > np.min(data['data']['lon']) and datapoint[1] < np.max(data['data']['lon'])):
+                    waypoints.append(datapoint)
+                else:
+                    droppedinfile += 1
+                
+            
+                
+            wptcountfile += 1
+        
+        totaldropped += droppedinfile
+        
+        print("Loaded %d/%d waypoints from %s" % (wptcountfile,droppedinfile + wptcountfile,filename))
+
+    data['waypoints'] = {}
+    data['waypoints']['names'] = []
+    data['waypoints']['lat'] = np.zeros(len(waypoints)+1,dtype=np.float)
+    data['waypoints']['lon'] = np.zeros(len(waypoints)+1,dtype=np.float)
+    
+    #this is for passing it into our previous functions
+    data['waypoints']['lat'][0] = data['data']['lat'][0]
+    data['waypoints']['lon'][0] = data['data']['lon'][0]
+        
+    for idx,w in zip(range(1,len(waypoints)+1),waypoints):
+        data['waypoints']['names'].append(w[2])
+        data['waypoints']['lat'][idx] = w[0]
+        data['waypoints']['lon'][idx] = w[1]
+    
+    
+    havconvlatlon(data, frame='waypoints')
+    
+    data['waypoints']['lat'] = data['waypoints']['lat'][1:]
+    data['waypoints']['lon'] = data['waypoints']['lon'][1:]
+    data['waypoints']['latnm'] = data['waypoints']['latnm'][1:]
+    data['waypoints']['lonnm'] = data['waypoints']['lonnm'][1:]
+    
+    print("Loaded %d/%d total waypoints!" % (len(waypoints),len(waypoints) + totaldropped))
+      
+    
+              
+        
 """
     Load garmin data, provide filename 
     returns object with metadata and datapoints
@@ -138,7 +218,7 @@ def loaddata(path):
 
     print("Loading data from \"%s\"" % os.path.basename(path))
 
-    data = {'filename':os.path.basename(path)}
+    data = {'filename':os.path.basename(path), 'markfiles':config['markfiles']}
     
     try:
         root = xml.parse(path)
@@ -182,10 +262,10 @@ def loaddata(path):
             if len(metadata.getElementsByTagName("bounds")) == 1:
 
                 bounds = metadata.getElementsByTagName("bounds")[0]
-                data['maxlat'] = bounds.getAttribute('maxlat')
-                data['maxlon'] = bounds.getAttribute('maxlon')
-                data['minlat'] = bounds.getAttribute('minlat')
-                data['minlon'] = bounds.getAttribute('minlon')
+                data['maxlat'] = float(bounds.getAttribute('maxlat'))
+                data['maxlon'] = float(bounds.getAttribute('maxlon'))
+                data['minlat'] = float(bounds.getAttribute('minlat'))
+                data['minlon'] = float(bounds.getAttribute('minlon'))
         
                 print("\tMaximum/Minimum Latitude:\t%s\t/\t%s" % ( data['maxlat'], data['minlat'] ))
                 print("\tMaximum/Minimum Longitude:\t%s\t/\t%s" % ( data['maxlon'], data['minlon'] )) 
@@ -240,6 +320,10 @@ def loaddata(path):
     
     #calc speed rolling avg
     calcspeed_rollavg(data,config['rollavg_points'])
+    
+    #load marks from markfiles
+    if data['markfiles']:
+        loadmarkfiles(data)
 
     loadtime = datetime.now() - startloadtime
 
@@ -344,6 +428,13 @@ def plotdata(data):
         plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap=config['timecmap'])
         plt.colorbar(label="Time (%s)" % (timeunit))
         plt.grid()
+        
+        #add marks
+        if data['markfiles'] and len(data['waypoints']) > 0:
+            plt.scatter(data['waypoints']['lonnm'], data['waypoints']['latnm'], marker='x')
+            for idx in range(len(data['waypoints']['names'])):
+                plt.annotate(data['waypoints']['names'][idx],(data['waypoints']['lonnm'][idx],data['waypoints']['latnm'][idx]))
+        
         #plt.show()
     
     if config['showspeed']:
@@ -359,7 +450,13 @@ def plotdata(data):
         plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap=config['speedcmap'])
         plt.colorbar(label="Speed (knots)")
         plt.grid()
-    
+        
+        #add marks
+        if data['markfiles'] and len(data['waypoints']) > 0:
+            plt.scatter(data['waypoints']['lonnm'], data['waypoints']['latnm'], marker='x')
+            for idx in range(len(data['waypoints']['names'])):
+                plt.annotate(data['waypoints']['names'][idx],(data['waypoints']['lonnm'][idx],data['waypoints']['latnm'][idx]))
+
         print("The graphs may be displayed one in front of the other!")
     
     plt.show()
@@ -381,7 +478,10 @@ def parsecmdline():
     parser = argparse.ArgumentParser(prog="Marine GPX Grapher",
                                      description="This program is designed to provide useful graphs of GPX tracking data from Garmin Quatix watches, though it should work with other files.  The program will display two graphs both of which show all of the tracking points as offsets for a zero position which is the first data point.  One graph will show the speed at each data point as color, and the other will show the time at each datapoint as color.  There is also a third graph showing speed with respect to time, however this is just for comparison.  Since this program is intended for marine data it does not take altitude into account.")
 
-    parser.add_argument("-f", "--file", help = "Open file", metavar = "filename", type = str)
+    parser.add_argument("-f", "--file", help = "Open file", metavar = "file", type = str)
+    parser.add_argument("-mf", "--markfile", help = "Add waypoints from GPX file to graphs (can be called multiple times)", action="append", type=str, metavar = "file")
+    parser.add_argument("-nf", "--nofilter",  help = "Loads all marks even if they are outside the track area", action="store_true")
+    
     parser.add_argument("-H", "--hours",  help = "Force graphs to use hours instead of minutes", action="store_true")
     parser.add_argument("-M", "--minutes" , help = "Force graphs to use minutes intead of hours", action="store_true")
     
@@ -450,11 +550,23 @@ def parsecmdline():
     if args.graphhist:
         config['showall'] = False
         config['showhist'] = True
-        
+    
+    if args.markfile:
+        config['markfiles'] = args.markfile
+    else:
+        config['markfiles'] = None
+    
+    if args.nofilter:
+        config['filterwaypoints'] = False
+    else:
+        config['filterwaypoints'] = True
+    
     if config['showall']:
         config['showtime'] = True
         config['showspeed'] = True
         config['showhist'] = True
+        
+    
         
 
 
