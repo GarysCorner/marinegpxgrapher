@@ -31,7 +31,9 @@ config = {  "hours":False,
             "showall":True,
             "showspeed":False,
             "showtime":False,
-            "showhist":False
+            "showhist":False,
+            "markfiles":None,
+            "rollavg_points":20
         }
 
 
