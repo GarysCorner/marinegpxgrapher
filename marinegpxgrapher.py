@@ -427,7 +427,8 @@ def plotdata(data):
         plt.title("Tracking with Time as color")
         plt.ylabel("NM North-South from start")
         plt.xlabel("NM West-East from start")
-        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap=config['timecmap'])
+        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=timedatahours, cmap=config['timecmap'],zorder=2)
+        plt.plot(data['data']['lonnm'],data['data']['latnm'], color='y', zorder=1)
         plt.colorbar(label="Time (%s)" % (timeunit))
         plt.grid()
         
@@ -449,7 +450,8 @@ def plotdata(data):
         plt.title("Tracking with speed as color")
         plt.ylabel("NM North-South from start")
         plt.xlabel("NM West-East from start")
-        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap=config['speedcmap'])
+        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['speed'], cmap=config['speedcmap'], zorder=2)
+        plt.plot(data['data']['lonnm'],data['data']['latnm'], color='y', zorder=1)
         plt.colorbar(label="Speed (knots)")
         plt.grid()
         
