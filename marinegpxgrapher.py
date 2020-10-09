@@ -656,7 +656,7 @@ if __name__ == "__main__":
             exit(8)
         
         root = Tk()
-        config['filename'] = tkinter.filedialog.askopenfilename()
+        config['filename'] = tkinter.filedialog.askopenfilename(title="Track File", filetypes=[("GPX File", "*.gpx"),("All files","*")])
         root.destroy()
 
         if config['filename'] == ():
