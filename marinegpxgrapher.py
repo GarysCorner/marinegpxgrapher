@@ -79,9 +79,9 @@ def calcangle(data):
     angles = np.zeros(data['data']['lonnm'].shape[0], dtype=np.float)
     angles[:-1] = 90 - np.degrees(np.arctan( (data['data']['latnm'][1:]-data['data']['latnm'][:-1]) / (data['data']['lonnm'][1:] - data['data']['lonnm'][:-1]) ))
     
-    southmask = (data['data']['lonnm'][1:] - data['data']['lonnm'][:-1]) < 0
+    westmask = (data['data']['lonnm'][1:] - data['data']['lonnm'][:-1]) < 0
     
-    angles[:-1][southmask] = angles[:-1][southmask] + 180
+    angles[:-1][westmask] = angles[:-1][westmask] + 180
     
     angles[-1] = angles[-2]
     data['data']['angle'] = angles
