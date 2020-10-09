@@ -32,6 +32,7 @@ config = {  "hours":False,
             "showspeed":False,
             "showtime":False,
             "showhist":False,
+            "showangle":False,
             "markfiles":None,
             "rollavg_points":20
         }
@@ -69,6 +70,24 @@ except ImportError:
 
 #earths radius in nautical miles we will use this later
 earthrad = 3436.801
+
+"""
+Calculate the angle
+"""
+def calcangle(data):
+    
+    angles = np.zeros(data['data']['lonnm'].shape[0], dtype=np.float)
+    angles[:-1] = 90 - np.degrees(np.arctan( (data['data']['latnm'][1:]-data['data']['latnm'][:-1]) / (data['data']['lonnm'][1:] - data['data']['lonnm'][:-1]) ))
+    
+    southmask = (data['data']['lonnm'][1:] - data['data']['lonnm'][:-1]) < 0
+    
+    angles[:-1][southmask] = angles[:-1][southmask] + 180
+    
+    angles[-1] = angles[-2]
+    data['data']['angle'] = angles
+    
+    
+    
 
 
 """
@@ -323,6 +342,8 @@ def loaddata(path):
     #calc speed rolling avg
     calcspeed_rollavg(data,config['rollavg_points'])
     
+    calcangle(data)
+    
     #load marks from markfiles
     if data['markfiles']:
         loadmarkfiles(data)
@@ -440,9 +461,29 @@ def plotdata(data):
         
         #plt.show()
     
+    if config['showangle']:
+        print("Plotting tracking data with angle in degrees")
+
+        fig, ax = plt.subplots(figsize=config['figsize'])
+        fig.canvas.set_window_title(trkname)
+        ax.set_aspect('equal')
+        plt.title("Tracking with angle as color")
+        plt.ylabel("NM North-South from start")
+        plt.xlabel("NM West-East from start")
+        plt.scatter(data['data']['lonnm'],data['data']['latnm'], c=data['data']['angle'], cmap=config['speedcmap'], zorder=2)
+        plt.plot(data['data']['lonnm'],data['data']['latnm'], color='y', zorder=1)
+        plt.colorbar(label="Angle (Degrees)")
+        plt.grid()
+        
+        #add marks
+        if data['markfiles'] and len(data['waypoints']) > 0:
+            plt.scatter(data['waypoints']['lonnm'], data['waypoints']['latnm'], marker='x')
+            for idx in range(len(data['waypoints']['names'])):
+                plt.annotate(data['waypoints']['names'][idx],(data['waypoints']['lonnm'][idx],data['waypoints']['latnm'][idx]))
+    
     if config['showspeed']:
     
-        print("Plotting tracking data with speed it nautical miles per hour")
+        print("Plotting tracking data with speed in nautical miles per hour")
 
         fig, ax = plt.subplots(figsize=config['figsize'])
         fig.canvas.set_window_title(trkname)
@@ -461,7 +502,7 @@ def plotdata(data):
             for idx in range(len(data['waypoints']['names'])):
                 plt.annotate(data['waypoints']['names'][idx],(data['waypoints']['lonnm'][idx],data['waypoints']['latnm'][idx]))
 
-        print("The graphs may be displayed one in front of the other!")
+    print("The graphs may be displayed one in front of the other!")
     
     plt.show()
 
@@ -491,6 +532,7 @@ def parsecmdline():
     
     parser.add_argument("-gs", "--graphspeed" , help = "Show speed graph", action="store_true")
     parser.add_argument("-gt", "--graphtime" , help = "Show time graph", action="store_true")
+    parser.add_argument("-ga", "--graphangle" , help = "Show angle graph", action="store_true")
     parser.add_argument("-gh", "--graphhist" , help = "Show speed history graph (rolling average)", action="store_true")
     parser.add_argument("-ra", "--rollavgpts" , help = "The number of points to use for rolling average (default 20)" , metavar="points", type=int)
     
@@ -554,6 +596,10 @@ def parsecmdline():
     if args.graphhist:
         config['showall'] = False
         config['showhist'] = True
+        
+    if args.graphangle:
+        config['showall'] = False
+        config['showangle'] = True
     
     if args.markfile:
         config['markfiles'] = set(args.markfile)
@@ -569,6 +615,7 @@ def parsecmdline():
         config['showtime'] = True
         config['showspeed'] = True
         config['showhist'] = True
+        config['showangle'] = True
         
     
         
